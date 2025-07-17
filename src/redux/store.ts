@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
-import loginReducer from './slices/loginSlice';
+import areaReducer from './slices/areaSlice';
+import carreraReducer from './slices/carreraSlice'
 
 export const store = configureStore({
   reducer: {
-    login: loginReducer
-  },
+    areas: areaReducer,
+    carreras: carreraReducer
+  }
 });
 
 export type RootState = ReturnType<typeof store.getState>;
