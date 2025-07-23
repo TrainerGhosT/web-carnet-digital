@@ -4,7 +4,6 @@ export interface Column<T> {
   header: string;
   accessor: keyof T | ((data: T) => React.ReactNode);
   className?: string;
-   render?: (row: T) => React.ReactNode; // ✅ añade esto
 }
 
 interface TableProps<T> {

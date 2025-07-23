@@ -1,11 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
+
 import api from "../../api/axios";
 import { cambiarEstadoUsuario } from "../../api/usuarioApi";
 import { loginSuccess, logout } from "../../redux/slices/loginSlice";
 import Swal from 'sweetalert2';
 import Layout from "../layout/Layout";
+import type { AppDispatch, RootState } from "../../redux/store";
 
 interface Usuario {
   id: number;
