@@ -1,9 +1,20 @@
-import { createRoot } from "react-dom/client";
+// import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-import { Provider } from "react-redux";
-import { store } from "./redux/store.ts";
 import { loginSuccess } from "./redux/slices/loginSlice";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </React.StrictMode>
+);
 
 // Hidratar sesión desde localStorage si existe
 const savedAccessToken = localStorage.getItem("access_token");
@@ -26,7 +37,7 @@ if (
   store.dispatch(
     loginSuccess({
       Usuario: savedUsuario,
-      Contrasenia: savedContrasenia,
+      // Contrasenia: savedContrasenia,
       access_token: savedAccessToken,
       refresh_token: savedRefreshToken,
       usuarioID: Number(savedUsuarioID),
@@ -36,8 +47,8 @@ if (
   );
 }
 
-createRoot(document.getElementById("root")!).render(
-  <Provider store={store}>
-    <App />
-  </Provider>
-);
+// createRoot(document.getElementById("root")!).render(
+//   <Provider store={store}>
+//     <App />
+//   </Provider>
+// );

@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from 'react-redux';
 import Layout from "../layout/Layout";
 
-import { RootState } from '../../redux/store';
+import type { RootState } from '../../redux/store';
 
 const Bienvenida: React.FC = () => {
  const { Usuario } = useSelector((state: RootState) => state.login);

@@ -13,20 +13,29 @@ export interface LoginState {
   errorType: string | null;
 }
 
-const getStoredUser = (): Usuario | null => {
-  try {
-    const storedUser = localStorage.getItem("usuario");
-    return storedUser ? JSON.parse(storedUser) : null;
-  } catch (error) {
-    console.error("Error parsing stored user:", error);
-    localStorage.removeItem("usuario");
-    return null;
-  }
-};
+// const getStoredUser = (): Usuario | null => {
+//   try {
+//     const storedUser = localStorage.getItem("usuario");
+//     return storedUser ? JSON.parse(storedUser) : null;
+//   } catch (error) {
+//     console.error("Error parsing stored user:", error);
+//     localStorage.removeItem("usuario");
+//     return null;
+//   }
+// };
 
 const initialState: LoginState = {
-  Usuario: getStoredUser(),
-  isAuthenticated: !!getStoredUser(),
+  // Usuario: getStoredUser(),
+  // isAuthenticated: !!getStoredUser(),
+  isAuthenticated: true, // <-- FALSAMENTE autenticado
+  Usuario: {
+    Usuario: "Dev",
+    access_token: '',
+    refresh_token: '',
+    usuarioID: 0,
+    expires_in: 0,
+    nombre_completo: 'Dev'
+  }, // Opcional
   loading: false,
   error: null,
   errorType: null,
