@@ -10,12 +10,9 @@ export const refreshToken = async () => {
 
   const response = await axios.post(
     `${import.meta.env.VITE_API_URL}/refresh`,
-    {}, // body vacío, se usa el token en el header
+    null, // body vacío (null), se usa el token en el header
     {
-      headers: {
-        Authorization: `Bearer ${refresh_token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { refresh_token },
     }
   );
 

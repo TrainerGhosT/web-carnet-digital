@@ -14,6 +14,9 @@ import type { RootState } from "./redux/store";
 import Bienvenida from "./components/pages/Bienvenida";
 import CambiarEstado from "./components/pages/CambiarEstado";
 import Login from "./components/pages/Login";
+import Usuarios from "./components/pages/Usuarios/Usuarios";
+import FormUsuario from "./components/pages/Usuarios/UsuarioForm";
+
 
 // Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -51,18 +54,14 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
 
+        <Route path="/dashboard" element={<Bienvenida />} />
+
+        <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/usuarios/crear" element={ <FormUsuario /> }/> 
+        <Route path="/usuarios/editar/:id" element={ <FormUsuario /> }/> 
 
         <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Bienvenida />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/CambiarEstado"
+          path="/cambiar-estado"
           element={
             <ProtectedRoute>
               <CambiarEstado />
@@ -70,6 +69,7 @@ const App: React.FC = () => {
           }
         />
 
+      
 
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/login" replace />} />

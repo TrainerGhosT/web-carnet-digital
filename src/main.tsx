@@ -26,12 +26,11 @@ if (
   store.dispatch(
     loginSuccess({
       Usuario: savedUsuario,
-      Contrasenia: savedContrasenia,
       access_token: savedAccessToken,
       refresh_token: savedRefreshToken,
       usuarioID: Number(savedUsuarioID),
       nombre_completo: savedNombreCompleto,
-      expires_in: Number(savedExpiresIn),
+      expires_in: String(savedExpiresIn),
     })
   );
 }

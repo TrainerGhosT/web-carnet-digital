@@ -1,25 +1,37 @@
-import axios from 'axios';
-import { store } from '../redux/store';
-import { loginSuccess, logout } from '../redux/slices/loginSlice';
-import { refreshToken } from './authApi';
+import axios from "axios";
+import { store } from "../redux/store";
+import { logout, loginSuccess } from "../redux/slices/loginSlice";
+import { refreshToken } from "./authApi";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+// Interceptor de REQUEST — Solo agrega el token
 api.interceptors.request.use((config) => {
-  const state = store.getState();
-  const token = state.login.Usuario?.access_token;
-
+  const token = store.getState().login.Usuario?.access_token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
+// Interceptor de RESPONSE — Valida el token y refresca si es necesario
 api.interceptors.response.use(
-  response => response,
+  async (response) => {
+    const token = store.getState().login.Usuario?.access_token;
+    if (token) {
+      try {
+        await axios.get(`${import.meta.env.VITE_API_URL}/validate`, {
+          headers: { token },
+        });
+      } catch {
+        store.dispatch(logout());
+        throw new axios.Cancel("Token inválido");
+      }
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -27,16 +39,14 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       const current = store.getState().login.Usuario;
-
       if (!current) {
         store.dispatch(logout());
-        return Promise.reject('Sesión no válida');
+        return Promise.reject("Sesión no válida");
       }
 
       try {
         const newTokens = await refreshToken();
 
-        // Crear el nuevo objeto usuario completo con los tokens renovados
         const updatedUser = {
           Usuario: current.Usuario,
           usuarioID: current.usuarioID,
@@ -46,13 +56,11 @@ api.interceptors.response.use(
           nombre_completo: current.nombre_completo,
         };
 
-        // Actualizar redux y localStorage con la info completa
         store.dispatch(loginSuccess(updatedUser));
         localStorage.setItem("usuario", JSON.stringify(updatedUser));
 
         originalRequest.headers.Authorization = `Bearer ${newTokens.access_token}`;
         return api(originalRequest);
-
       } catch (refreshError) {
         store.dispatch(logout());
         return Promise.reject(refreshError);

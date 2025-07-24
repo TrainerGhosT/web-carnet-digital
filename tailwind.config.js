@@ -11,6 +11,6 @@ module.exports = {
     },
   },
   plugins: [
-    require("flowbite/plugin"),  // ← activa los estilos de Flowbite
+    require("flowbite-react/plugin"),  // ← activa los estilos de Flowbite
   ],
 };

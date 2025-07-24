@@ -2,22 +2,26 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const login = async (usuario: string, contrasena: string) => {
-  const tipoUsuario = usuario.endsWith('@cuc.cr') ? 'estudiante'
-                    : usuario.endsWith('@cuc.ac.cr') ? 'funcionario'
+export const login = async (correo: string, contrasena: string) => {
+  const tipousuario = correo.endsWith('@cuc.cr') ? 'estudiante'
+                    : correo.endsWith('@cuc.ac.cr') ? 'funcionario' 
                     : '';
 
-  if (!tipoUsuario) {
+  if (!tipousuario) {
     throw new Error('Dominio del correo no es válido');
   }
 
-  const response = await axios.post(`${API_URL}/login`, {}, {
+  console.log("Tipo de usuario:", tipousuario);
+
+  const response = await axios.post(`${API_URL}/login`, null, {
     headers: {
-      'usuario': usuario,
+      'correo': correo,
       'contrasena': contrasena,
-      'tipoUsuario': tipoUsuario
+      'tipousuario': tipousuario
     }
   });
+
+  console.log("Response:", response.data);
 
   return response.data;
 };

@@ -5,5 +5,4 @@ export interface Usuario {
   usuarioID: number;
   expires_in: string;
   nombre_completo: string;
-  
 }
