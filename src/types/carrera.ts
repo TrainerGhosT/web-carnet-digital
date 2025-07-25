@@ -1,5 +1,5 @@
 export interface Carrera {
-  id: number;
+  idCarrera: number;
   nombre: string;
   director: string;
   email: string;

@@ -1,34 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import Layout from "../../layout/Layout";
+import { useNavigate, useParams } from "react-router-dom";  // Usamos useParams para obtener el ID de la URL
 
 const EditArea = () => {
-  const [id, setId] = useState("");
+  const { id } = useParams();  // Obtenemos el ID desde la URL
   const [nombre, setNombre] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
-  const [cargando, setCargando] = useState(false);
 
-  const buscarArea = async () => {
-    setError("");
-    setMensaje("");
-    setNombre("");
-    setCargando(true);
+  const navigate = useNavigate(); // Inicializamos el hook para la navegación
 
-    try {
-      const response = await axios.get(`http://localhost:3002/area/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
 
-      const data = response.data.data;
-      setNombre(data.nombre);
-    } catch {
-      setError("❌ No se encontró el área con ese ID.");
-    } finally {
-      setCargando(false);
+  // Cargar los datos del área al principio usando el ID desde la URL
+  useEffect(() => {
+    if (id) {
+      axios
+        .get(`http://localhost:3002/area/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        .then((response) => {
+          const data = response.data.data;
+          setNombre(data.nombre);
+        })
+        .catch(() => {
+          setError("❌ No se encontró el área con ese ID.");
+        });
     }
-  };
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,48 +58,48 @@ const EditArea = () => {
     }
   };
 
+  // Función para manejar la navegación hacia la página anterior
+  const handleGoBack = () => {
+    navigate(-1); // Regresa a la página anterior en el historial
+  };
+
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-4">Modificar Área</h1>
+    <Layout>
+      <div className="bg-white shadow rounded-lg p-6 text-center max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">Modificar Área</h1>
 
-      <div className="space-y-2 mb-6">
-        <input
-          type="number"
-          placeholder="ID del área"
-          className="w-full border p-2 rounded"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-        />
-        <button
-          onClick={buscarArea}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-          disabled={cargando}
-        >
-          {cargando ? "Buscando..." : "Buscar Área"}
-        </button>
+        {/* Formulario de edición dentro del recuadro azul */}
+        <div className="mt-6 p-6 bg-blue-100 rounded-lg border border-blue-100">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Nuevo nombre del área"
+              className="w-full border p-2 rounded"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+            >
+              Guardar Cambios
+            </button>
+
+            <button
+              onClick={handleGoBack}
+              className="w-full bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400"
+
+            >
+              Atras
+            </button>
+          </form>
+
+          {/* Mensajes de error o éxito */}
+          {mensaje && <p className="text-green-600 mt-4">{mensaje}</p>}
+          {error && <p className="text-red-500 mt-4">{error}</p>}
+        </div>
       </div>
-
-      {nombre && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Nuevo nombre del área"
-            className="w-full border p-2 rounded"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-          >
-            Guardar Cambios
-          </button>
-        </form>
-      )}
-
-      {mensaje && <p className="text-green-600 mt-4">{mensaje}</p>}
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-    </div>
+    </Layout>
   );
 };
 

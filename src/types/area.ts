@@ -1,5 +1,5 @@
 export interface Area {
-  id: number;
+  idArea: number;
   nombre: string;
 }
 

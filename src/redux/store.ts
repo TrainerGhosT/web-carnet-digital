@@ -1,9 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import loginReducer from './slices/loginSlice';
+import carreraReducer from './slices/carreraSlice'
+import areaReducer from './slices/areaSlice';
 
 export const store = configureStore({
   reducer: {
-    login: loginReducer
+    login: loginReducer,
+    areas: areaReducer,
+    carreras: carreraReducer
   },
 });
 

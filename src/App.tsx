@@ -4,7 +4,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
+  // Navigate,
   // useLocation,
 } from "react-router-dom";
 // import { useSelector } from "react-redux";
@@ -27,6 +27,8 @@ import SeeCarrera     from "./components/pages/Carreras/SeeCarrera";
 import CreateCarrera  from "./components/pages/Carreras/CreateCarrera";
 import EditCarrera    from "./components/pages/Carreras/EditCarrera";
 import DeleteCarrera  from "./components/pages/Carreras/DeleteCarrera";
+
+
 
 // // Componente para proteger rutas privadas
 // const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -84,21 +86,21 @@ const App: React.FC = () => {
         />
 
         {/* Rutas para Áreas de Trabajo */}
-        <Route path="/areas-trabajo"           element={<ListAreas />} />
-        <Route path="/areas-trabajo/crear"     element={<CreateArea />} />
-        <Route path="/areas-trabajo/editar"    element={<EditArea />} />
-        <Route path="/areas-trabajo/eliminar"  element={<DeleteArea />} />
-        <Route path="/areas-trabajo/:id"       element={<SeeArea />} />
+        <Route path="/area"           element={<ListAreas />} />
+        <Route path="/area/crear"     element={<CreateArea />} />
+        <Route path="/area/editar/:id" element={<EditArea />} />
+        <Route path="/area/eliminar"  element={<DeleteArea />} />
+        <Route path="/area/:id"       element={<SeeArea />} />
 
         {/* Rutas para Carreras */}
-        <Route path="/carreras"           element={<ListCarreras />} />
-        <Route path="/carreras/crear"     element={<CreateCarrera />} />
-        <Route path="/carreras/editar"    element={<EditCarrera />} />
-        <Route path="/carreras/eliminar"  element={<DeleteCarrera />} />
-        <Route path="/carreras/:id"       element={<SeeCarrera />} />
+        <Route path="/carrera"           element={<ListCarreras />} />
+        <Route path="/carrera/crear"     element={<CreateCarrera />} />
+        <Route path="/carrera/editar/:id" element={<EditCarrera />} />
+        <Route path="/carrera/eliminar"  element={<DeleteCarrera />} />
+        <Route path="/carrera/:id"       element={<SeeCarrera />} />
 
-        {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Redirección por defecto
+        <Route path="*" element={<Navigate to="/login" replace />} /> */}
       </Routes>
     </Router>
   );

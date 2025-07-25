@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import Layout from "../../layout/Layout";
+import { useNavigate ,useParams } from "react-router-dom";  // Usamos useParams para obtener el ID en la URL
 
 const EditCarrera = () => {
-  const [id, setId] = useState("");
+  const { id } = useParams();  // Obtenemos el ID desde la URL
   const [carrera, setCarrera] = useState({
+    id: "",  // Agregamos 'id' en el estado
     nombre: "",
     director: "",
     email: "",
@@ -12,33 +15,33 @@ const EditCarrera = () => {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
-  const buscarCarrera = async () => {
-    setMensaje("");
-    setError("");
+  const navigate = useNavigate(); // Inicializamos el hook para la navegación
 
-    if (!id.trim()) {
-      setError("⚠️ Ingrese un ID válido.");
-      return;
+
+  // Cargar la carrera al principio
+  useEffect(() => {
+    if (id) {
+      axios
+        .get(`http://localhost:3002/carrera/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        .then((response) => {
+          const data = response.data.data;
+          setCarrera({
+            id: data.id,  // Asignamos el id aquí
+            nombre: data.nombre,
+            director: data.director,
+            email: data.email,
+            telefono: data.telefono,
+          });
+        })
+        .catch(() => {
+          setError("❌ No se encontró la carrera con ese ID.");
+        });
     }
-
-    try {
-      const response = await axios.get(`http://localhost:3002/carrera/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      const data = response.data.data;
-      setCarrera({
-        nombre: data.nombre,
-        director: data.director,
-        email: data.email,
-        telefono: data.telefono,
-      });
-    } catch {
-      setError("❌ No se encontró la carrera con ese ID.");
-    }
-  };
+  }, [id]);
 
   const validar = () => {
     const { nombre, director, email, telefono } = carrera;
@@ -71,7 +74,7 @@ const EditCarrera = () => {
 
     try {
       await axios.put(
-        `http://localhost:3002/carrera/${id}`,
+        `http://localhost:3002/carrera/${id}`,  // Usamos el id en la URL
         carrera,
         {
           headers: {
@@ -86,69 +89,84 @@ const EditCarrera = () => {
     }
   };
 
+  // Función para manejar la navegación hacia la página anterior
+  const handleGoBack = () => {
+    navigate(-1); // Regresa a la página anterior en el historial
+  };
+
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Editar Carrera</h1>
+    <Layout>
+      {/* Recuadro blanco con sombra */}
+      <div className="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
+        <h1 className="text-xl font-bold mb-4">Editar Carrera</h1>
 
-      <div className="mb-4">
-        <label className="block mb-1">ID de la carrera:</label>
-        <input
-          type="text"
-          className="w-full border p-2 rounded"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-        />
-        <button
-          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={buscarCarrera}
-        >
-          Buscar
-        </button>
-      </div>
+        {/* Recuadro azul para el formulario */}
+        <div className="mt-6 p-6 bg-blue-100 rounded-lg border border-blue-100">
+          {carrera.nombre && (
+            <div className="space-y-3 mt-4">
+              <input
+                type="text"
+                className="w-full border p-2 rounded"
+                placeholder="Nombre"
+                value={carrera.nombre}
+                onChange={(e) =>
+                  setCarrera({ ...carrera, nombre: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                className="w-full border p-2 rounded"
+                placeholder="Director"
+                value={carrera.director}
+                onChange={(e) =>
+                  setCarrera({ ...carrera, director: e.target.value })
+                }
+              />
+              <input
+                type="email"
+                className="w-full border p-2 rounded"
+                placeholder="Email"
+                value={carrera.email}
+                onChange={(e) =>
+                  setCarrera({ ...carrera, email: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                className="w-full border p-2 rounded"
+                placeholder="Teléfono"
+                value={carrera.telefono}
+                onChange={(e) =>
+                  setCarrera({ ...carrera, telefono: e.target.value })
+                }
+              />
 
-      {carrera.nombre && (
-        <div className="space-y-3 mt-4">
-          <input
-            type="text"
-            className="w-full border p-2 rounded"
-            placeholder="Nombre"
-            value={carrera.nombre}
-            onChange={(e) => setCarrera({ ...carrera, nombre: e.target.value })}
-          />
-          <input
-            type="text"
-            className="w-full border p-2 rounded"
-            placeholder="Director"
-            value={carrera.director}
-            onChange={(e) => setCarrera({ ...carrera, director: e.target.value })}
-          />
-          <input
-            type="email"
-            className="w-full border p-2 rounded"
-            placeholder="Email"
-            value={carrera.email}
-            onChange={(e) => setCarrera({ ...carrera, email: e.target.value })}
-          />
-          <input
-            type="text"
-            className="w-full border p-2 rounded"
-            placeholder="Teléfono"
-            value={carrera.telefono}
-            onChange={(e) => setCarrera({ ...carrera, telefono: e.target.value })}
-          />
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                onClick={handleSubmit}
+              >
+                Actualizar
+              </button>
 
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            onClick={handleSubmit}
-          >
-            Actualizar
-          </button>
+              {/* Botón Atrás */}
+
+              <button
+                onClick={handleGoBack} // Llama a la función handleGoBack para ir atrás
+                className="w-full bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400"
+              >
+                Atrás
+              </button>
+
+
+            </div>
+          )}
+
+          {/* Mensajes de error o éxito */}
+          {mensaje && <p className="text-green-600 mt-4">{mensaje}</p>}
+          {error && <p className="text-red-500 mt-4">{error}</p>}
         </div>
-      )}
-
-      {mensaje && <p className="text-green-600 mt-4">{mensaje}</p>}
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-    </div>
+      </div>
+    </Layout>
   );
 };
 

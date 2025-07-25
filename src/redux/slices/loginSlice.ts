@@ -25,21 +25,20 @@ export interface LoginState {
 // };
 
 const initialState: LoginState = {
-  // Usuario: getStoredUser(),
-  // isAuthenticated: !!getStoredUser(),
-  isAuthenticated: true, // <-- FALSAMENTE autenticado
+  isAuthenticated: true, // Aquí puedes dejarlo como true para pruebas
   Usuario: {
     Usuario: "Dev",
     access_token: '',
     refresh_token: '',
     usuarioID: 0,
     expires_in: 0,
-    nombre_completo: 'Dev'
-  }, // Opcional
+    nombre_completo: 'Dev',
+  },
   loading: false,
   error: null,
   errorType: null,
 };
+
 
 const loginSlice = createSlice({
   name: 'login',
