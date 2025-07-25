@@ -26,7 +26,7 @@ import ListCarreras   from "./components/pages/Carreras/ListCarreras";
 import SeeCarrera     from "./components/pages/Carreras/SeeCarrera";
 import CreateCarrera  from "./components/pages/Carreras/CreateCarrera";
 import EditCarrera    from "./components/pages/Carreras/EditCarrera";
-import DeleteCarrera  from "./components/pages/Carreras/DeleteCarrera";
+// import DeleteCarrera  from "./components/pages/Carreras/DeleteCarrera";
 
 
 
@@ -96,7 +96,7 @@ const App: React.FC = () => {
         <Route path="/carrera"           element={<ListCarreras />} />
         <Route path="/carrera/crear"     element={<CreateCarrera />} />
         <Route path="/carrera/editar/:id" element={<EditCarrera />} />
-        <Route path="/carrera/eliminar"  element={<DeleteCarrera />} />
+        {/* <Route path="/carrera/eliminar"  element={<DeleteCarrera />} /> */}
         <Route path="/carrera/:id"       element={<SeeCarrera />} />
 
         {/* Redirección por defecto

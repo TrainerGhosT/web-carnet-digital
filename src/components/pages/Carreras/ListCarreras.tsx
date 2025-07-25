@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCarreras, deleteCarrera } from "../../../redux/slices/carreraSlice";  
-import { useNavigate } from "react-router-dom";  // Importamos useNavigate
+import { useNavigate } from "react-router-dom";  
 import type { RootState, AppDispatch } from "../../../redux/store";
 import type { Carrera } from "../../../types/carrera";  
 import Layout from "../../layout/Layout";
@@ -10,7 +10,7 @@ import axios from "axios";
 const ListCarreras = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { carreras, loading, error } = useSelector((state: RootState) => state.carreras);
-  const navigate = useNavigate();  // Inicializamos el hook para la navegación
+  const navigate = useNavigate();  
 
   const [searchId, setSearchId] = useState<string>(""); 
   const [errorSearch, setErrorSearch] = useState<string>("");
@@ -28,12 +28,43 @@ const ListCarreras = () => {
     dispatch(getCarreras());
   }, [dispatch]);
 
+  // // Función para manejar la búsqueda por ID
+  // const handleSearch = async (id: number) => {
+  //   setErrorSearch(""); 
+  //   if (isNaN(id) || id <= 0) {
+  //     setErrorSearch("⚠️ Ingrese un ID válido");
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await axios.get(`http://localhost:3002/carrera/${id}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     });
+
+  //     const data = response.data;  
+  //     setCarrera({
+  //       idCarrera: data.idCarrera,  
+  //       nombre: data.nombre,
+  //       director: data.director,
+  //       email: data.email,
+  //       telefono: data.telefono,
+  //     });
+  //   } catch {
+  //     setErrorSearch("❌ Carrera no encontrada.");
+  //   }
+  // };
+
   // Función para manejar la búsqueda por ID
-  const handleSearch = async () => {
-    setErrorSearch(""); 
-    const id = parseInt(searchId.trim(), 10);  
+  const handleSearchh = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorSearch(""); // Limpiar errores previos
+    setCarrera(null); // Limpiar el área mostrada previamente
+
+    const id = parseInt(searchId.trim(), 10);  // Convertir el ID de string a number
     if (isNaN(id) || id <= 0) {
-      setErrorSearch("⚠️ Ingrese un ID válido (mayor que 0)");
+      setErrorSearch("⚠️ Ingrese un ID válido");
       return;
     }
 
@@ -44,7 +75,7 @@ const ListCarreras = () => {
         },
       });
 
-      const data = response.data;  
+      const data = response.data.data;
       setCarrera({
         idCarrera: data.idCarrera,  
         nombre: data.nombre,
@@ -52,39 +83,29 @@ const ListCarreras = () => {
         email: data.email,
         telefono: data.telefono,
       });
-    } catch {
-      setErrorSearch("❌ Carrera no encontrada.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setErrorSearch(`❌ Error: ${err.response?.data?.message || "No se pudo obtener la carrera"}`);
+      } else {
+        setErrorSearch("❌ Error inesperado al buscar la carrera");
+      }
     }
   };
-
-
 
   // Función para eliminar una carrera 
   const handleDelete = async () => {
     if (carreraToDelete) {
-      console.log("Eliminando carrera con ID:", carreraToDelete.idCarrera);  // Verifica el ID
       try {
-        // Eliminamos la carrera del backend
-        await axios.delete(`http://localhost:3002/carrera/${carreraToDelete.idCarrera}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        // Usamos el thunk deleteCarrera
+        await dispatch(deleteCarrera(carreraToDelete.idCarrera));  // Utilizamos el thunk de Redux
 
-        // Actualizamos el estado global en Redux, eliminando la carrera
-        dispatch(deleteCarrera(carreraToDelete.idCarrera));
-
-        // Actualizamos el mensaje
         setMensaje("✅ Carrera eliminada correctamente.");
-
-        // Eliminamos la carrera de la lista local (sin necesidad de buscar nuevamente)
         setCarrera(null);
-        setSearchId("");  // Limpiamos el ID de búsqueda
-        setConfirmDelete(false); // Cerramos el modal de confirmación
-
+        setSearchId("");  
+        setConfirmDelete(false); 
       } catch (error) {
-        console.error("Error al eliminar la carrera:", error);
         setMensaje("❌ Error al eliminar la carrera.");
+        console.error("Error al eliminar la carrera:", error);
       }
     }
   };
@@ -93,6 +114,7 @@ const ListCarreras = () => {
   const confirmElimination = (carrera: Carrera) => {
     setCarreraToDelete(carrera);
     setConfirmDelete(true);
+    // handleSearchh(carrera.idCarrera);  // Aquí se llama a la búsqueda automáticamente al hacer clic
   };
 
   // Función para cancelar la eliminación
@@ -102,12 +124,7 @@ const ListCarreras = () => {
 
   // Función para redirigir a la página de edición
   const handleEditCarrera = (idCarrera: number) => {  
-    console.log("ID a editar:", idCarrera);  // Asegúrate de que el ID sea el correcto
-    if (idCarrera) {
-      navigate(`/carrera/editar/${idCarrera}`);  // Redirige a la página de edición de la carrera
-    } else {
-      console.log("ID no válido");
-    }
+    navigate(`/carrera/editar/${idCarrera}`);  // Redirige a la página de edición de la carrera
   };
 
   return (
@@ -140,6 +157,26 @@ const ListCarreras = () => {
 
         {/* Búsqueda por ID */}
         <div className="mb-4">
+          <form onSubmit={handleSearchh} className="space-y-4">
+            <input
+              type="number"
+              placeholder="Buscar por ID"
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              className="p-2 border border-gray-300 rounded-md mr-2"
+            />
+            <button
+              type="submit"
+              className="p-2 bg-blue-500 text-white rounded-md"
+            >
+              Buscar
+            </button>
+          </form>
+          {errorSearch && <p className="text-red-500 mt-2">{errorSearch}</p>}
+        </div>
+
+        {/* Búsqueda por ID
+        <div className="mb-4">
           <input
             type="number"  
             placeholder="Buscar por ID"
@@ -148,27 +185,32 @@ const ListCarreras = () => {
             className="p-2 border rounded-md mr-2"
           />
           <button
-            onClick={handleSearch}
+            onClick={() => handleSearch(Number(searchId))}  // Llama a la función de búsqueda con el ID
             className="p-2 bg-blue-500 text-white rounded-md"
           >
             Buscar
           </button>
           {errorSearch && <p className="text-red-500 mt-2">{errorSearch}</p>}
-        </div>
+        </div> */}
 
+        {/* Mostrar el Carrera encontrada por ID */}
         {carrera && (
-          <div className="mt-6 p-6 bg-yellow-100 rounded-lg border border-yellow-300">
-            <h2 className="text-xl font-semibold text-yellow-800 mb-3">
-              Información de la Carrera
-            </h2>
-            <p><strong>Nombre:</strong> {carrera.nombre}</p>
-            <p><strong>Director:</strong> {carrera.director}</p>
-            <p><strong>Email:</strong> {carrera.email}</p>
-            <p><strong>Teléfono:</strong> {carrera.telefono}</p>
-            <button
-            >
-              Eliminar Carrera
-            </button>
+          <div className="mt-6 p-4 bg-blue-100 border border-blue-300 shadow rounded">
+            <p className="text-left">
+              <strong>Identificador de la carrera:</strong> {carrera.idCarrera}
+            </p>
+            <p className="text-left">
+              <strong>Nombre de la carrera:</strong> {carrera.nombre}
+            </p>
+            <p className="text-left">
+              <strong>Director de la carrera:</strong> {carrera.director}
+            </p>
+            <p className="text-left">
+              <strong>Email:</strong> {carrera.email}
+            </p>
+            <p className="text-left">
+              <strong>Teléfono:</strong> {carrera.telefono}
+            </p>
           </div>
         )}
 

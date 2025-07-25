@@ -35,7 +35,7 @@ const ListAreas = () => {
 
     const id = parseInt(searchId.trim(), 10);  // Convertir el ID de string a number
     if (isNaN(id) || id <= 0) {
-      setErrorSearch("⚠️ Ingrese un ID válido (mayor que 0)");
+      setErrorSearch("⚠️ Ingrese un ID válido");
       return;
     }
 

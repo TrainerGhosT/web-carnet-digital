@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { CarreraState } from '../../types/carrera';
 import * as api from '../../api/carreraAPI';
+import axios from "axios";
 
 const initialState: CarreraState = {
   carreras: [],
@@ -27,11 +28,17 @@ export const deleteCarrera = createAsyncThunk(
   'carreras/deleteCarrera',
   async (id: number, { rejectWithValue }) => {
     try {
-      await api.deleteCarrera(id);  // Asegúrate de que esta función esté correctamente exportada
-      return id;  // Devolvemos el ID para eliminarlo del estado
-    } catch (error) {
+      // Llamada a la API para eliminar la carrera
+      await axios.delete(`http://localhost:3002/carrera/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Asegúrate de que el token esté presente
+        },
+      });
+
+      return id;  // Devolvemos el ID para eliminarlo del estado global
+    } catch (error: unknown) {
       if (error instanceof Error) return rejectWithValue(error.message);
-      return rejectWithValue('Error al eliminar la carrera');
+      return rejectWithValue('Error desconocido al eliminar la carrera');
     }
   }
 );
