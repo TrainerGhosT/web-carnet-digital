@@ -5,6 +5,6 @@ export interface Usuario {
   access_token: string;
   refresh_token: string;
   usuarioID: number;
-  expires_in: string;
+  expires_in: number;
   nombre_completo: string;
 }

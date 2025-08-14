@@ -55,7 +55,7 @@ const Sidebar: React.FC = () => {
       icon: Settings,
       children: [
         {
-          to: "/carreras",
+          to: "/carrera",
           label: "Carreras",
           icon: GraduationCap,
           
@@ -71,7 +71,7 @@ const Sidebar: React.FC = () => {
           icon: IdCard,
         },
         {
-          to: "/areas-trabajo",
+          to: "/area",
           label: "Áreas de Trabajo",
           icon: Building,
         },
