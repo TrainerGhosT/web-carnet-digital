@@ -11,11 +11,12 @@ import Button from "../common/Button";
 import axios from "axios";
 import api from "../../api/axios";
 import type { AppDispatch, RootState } from "../../redux/store";
-import { obtenerUsuarios } from "../../api/usuarioApi";
+import { obtenerUsuarioPorId } from "../../api/usuarioApi";
 import Swal from "sweetalert2";
+import { User, Lock } from "lucide-react";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState("");
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -69,20 +70,21 @@ const Login: React.FC = () => {
         await login(username, password);
 
       api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
-      const userData = await obtenerUsuarios();
-      const nombre_completo = userData?.nombre_completo || username;
+      
+      // Obtener datos completos del usuario por su ID
+      const usuarioResponse = await obtenerUsuarioPorId(usuarioID.toString());
+      const usuarioData = usuarioResponse.data;
 
       const formattedUserData = {
-        Usuario: username,
+        Usuario: usuarioData,
         access_token,
         refresh_token,
         usuarioID,
         expires_in,
-        nombre_completo,
+        nombre_completo: usuarioData.nombreCompleto,
       };
 
       dispatch(loginSuccess(formattedUserData));
-      localStorage.setItem("usuario", JSON.stringify(formattedUserData));
 
       navigate("/dashboard");
     } catch (error: unknown) {
@@ -103,105 +105,173 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gray-100 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex justify-center mb-6">
-          <img
-            src="/logo_carnet.jpg"
-            alt="Logo Los 4 mares"
-            className="w-70 h-50"
-          />
-        </div>
-        <div></div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl mx-auto">
+        <div className="grid lg:grid-cols-2 shadow-2xl rounded-2xl overflow-hidden">
+          
+          {/* Card Izquierdo - Inspirado en Sidebar */}
+          <div className="bg-gradient-to-b bg-slate-950 text-white p-10 lg:p-16 flex flex-col justify-center">
+            <div className="text-center space-y-4">
+              {/* Logo */}
+              <div className="flex justify-center">
+                <div className="w-76 h-50 rounded-3xl flex items-center justify-center shadow-lg p-0"> 
+                  <img
+                    src="/logo_carnet.jpg"
+                    alt="Logo Carnet Digital"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                </div>
+              </div>
 
-        <div className="p-8 bg-white rounded-lg shadow-md">
-          {error && errorType === "authError" && (
-            <div className="p-3 mb-4 text-center text-red-600 rounded-md bg-red-50 text-md">
-              {error}
+              {/* Información del sistema */}
+              <div className="space-y-6">
+                <h1 className="text-4xl font-extrabold text-white tracking-wide">
+                  Carnet Digital CUC
+                </h1>
+                <h2 className="text-2xl font-semibold text-blue-400">
+                  Grupo Los 4 Mares
+                </h2>
+              </div>
+
+              <div className="pt-6">
+                <p className="text-slate-400 text-center leading-relaxed max-w-md mx-auto text-lg">
+                  Plataforma implementada para la gestión y scaneo de carnets digitales.
+                </p>
+              </div>
             </div>
-          )}
+          </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Usuario
-              </label>
-              <div className="mt-1">
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  ref={usernameRef}
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (error)
-                      dispatch(loginFailure({ message: "", errorType: "" }));
-                  }}
-                  className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
+          {/* Card Derecho - Formulario de Login */}
+          <div className="bg-white relative overflow-hidden p-12 flex flex-col justify-center">
+            {/* Mensaje de error flotante fuera del form, fixed top-right */}
+            {error && errorType === "authError" && (
+              <div className="fixed top-6 right-6 w-auto max-w-sm z-50">
+                <div className="p-4 bg-red-50 border border-red-300 rounded-xl shadow-lg animate-pulse">
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 text-red-600 mr-3 flex-shrink-0">
+                      <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <p className="text-red-800 text-sm font-semibold">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Header del formulario */}
+            <div className="bg-white px-8 py-6 mb-8">
+              <div className="text-center">
+                <div className="flex justify-center mb-6">
+                  <div className="w-28 h-28 flex items-center justify-center">
+                    <img src="https://www.cuc.ac.cr/wp-content/uploads/2022/12/logo-cuc.svg" alt="Logo CUC" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Iniciar Sesión</h2>
+                <p className="text-gray-600 text-base">Accede a tu cuenta para continuar</p>
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Contraseña
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  ref={passwordRef}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (error)
-                      dispatch(loginFailure({ message: "", errorType: "" }));
-                  }}
-                  className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
+            {/* Formulario */}
+            <div className="p-0">
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                {/* Campo Usuario */}
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Usuario
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-slate-800" />
+                    </div>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      ref={usernameRef}
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        if (error)
+                          dispatch(loginFailure({ message: "", errorType: "" }));
+                      }}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Ingresa tu correo institucional"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 mr-3 -ml-1 text-white animate-spin"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Iniciando sesión...
-                  </span>
-                ) : (
-                  "Aceptar"
-                )}
-              </Button>
+                {/* Campo Contraseña */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-slate-800" />
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      ref={passwordRef}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error)
+                          dispatch(loginFailure({ message: "", errorType: "" }));
+                      }}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Ingresa tu contraseña"
+                    />
+                  </div>
+                </div>
+
+                {/* Botón Submit */}
+                <div className="pt-2">
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-blue-500/25  hover:to-blue-700 py-3 px-4 rounded-xl shadow-lg hover:shadow-xl "
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 mr-3 -ml-1 text-white animate-spin"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Iniciando sesión...
+                      </span>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
+                  </Button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

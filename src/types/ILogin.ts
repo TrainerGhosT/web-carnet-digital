@@ -1,5 +1,7 @@
+import type { UsuarioData } from "./IUsuario";
+
 export interface Usuario {
-  Usuario: string;
+  Usuario: UsuarioData;
   access_token: string;
   refresh_token: string;
   usuarioID: number;

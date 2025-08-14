@@ -122,14 +122,14 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <section className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 bg-slate-900  h-full flex flex-col w-64 shadow-2xl">
-    <div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white h-full flex flex-col w-64 shadow-2xl">
-      {/* Header */}
-      <div className="px-6 py-8 flex items-center border-b border-slate-800/50">
+    <section className="flex flex-col w-64 h-full bg-gradient-to-b shadow-2xl from-slate-900 via-slate-800 to-slate-900 bg-slate-900">
+    <div className="flex flex-col w-64 h-full text-white bg-gradient-to-b shadow-2xl from-slate-900 via-slate-800 to-slate-900">
+
+      <div className="flex items-center px-6 py-8 border-b border-slate-800/50">
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-25"></div>
-          <div className="relative bg-slate-800 p-2 rounded-lg">
-            <Shield className="h-6 w-6 text-blue-400 drop-shadow-lg" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg opacity-25 blur"></div>
+          <div className="relative p-2 rounded-lg bg-slate-800">
+            <Shield className="w-6 h-6 text-blue-400 drop-shadow-lg" />
           </div>
         </div>
         <div className="ml-3">
@@ -141,7 +141,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Menu Items */}
-      <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+      <div className="overflow-y-auto flex-1 px-3 py-6 space-y-1">
         {menuItems.map((item, index) => (
           <div key={index}>
             {item.children ? (
@@ -156,13 +156,12 @@ const Sidebar: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center">
-                    <item.icon className="h-5 w-5 mr-3" />
+                    <item.icon className="mr-3 w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
                   </div>
                   <ChevronRight
                     className={`h-4 w-4 transition-transform duration-200 ${
-                      openMenus[index] ? "rotate-90" : ""
-                    }`}
+                      openMenus[index] ? "rotate-90" : ""}`}
                   />
                 </button>
 
@@ -178,7 +177,7 @@ const Sidebar: React.FC = () => {
                             : "border-transparent text-slate-400 hover:bg-slate-800/30 hover:border-indigo-600 hover:text-slate-300"
                         }`}
                       >
-                        <child.icon className="h-4 w-4 mr-3" />
+                        <child.icon className="mr-3 w-5 h-5" />
                         <span className="text-sm font-medium">{child.label}</span>
                       </Link>
                     ))}
@@ -195,7 +194,7 @@ const Sidebar: React.FC = () => {
                     : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                 }`}
               >
-                <item.icon className="h-5 w-5 mr-3" />
+                <item.icon className="mr-3 w-6 h-6" />
                 <span className="font-medium">{item.label}</span>
               </Link>
             )}
@@ -207,9 +206,9 @@ const Sidebar: React.FC = () => {
       <div className="p-4 border-t border-slate-700/50">
         <button
           onClick={handleLogout}
-          className="flex items-center w-full px-4 py-3 text-slate-300 hover:text-white hover:bg-red-900/20 hover:border-red-500/50 rounded-xl transition-all duration-200 border border-transparent group"
+          className="flex items-center px-4 py-3 w-full rounded-xl border border-transparent transition-all duration-200 text-slate-300 hover:text-white hover:bg-red-900/20 hover:border-red-500/50 group"
         >
-          <LogOut className="h-5 w-5 mr-3 group-hover:text-red-400" />
+          <LogOut className="mr-3 w-5 h-5 group-hover:text-red-400" />
           <span className="font-medium">Cerrar Sesión</span>
         </button>
       </div>

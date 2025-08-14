@@ -4,7 +4,8 @@ import { logout, loginSuccess } from "../redux/slices/loginSlice";
 import { refreshToken } from "./authApi";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL  || import.meta.env.VITE_API_AUTH_URL,
+  
 });
 
 // Interceptor de REQUEST — Solo agrega el token
@@ -53,7 +54,7 @@ api.interceptors.response.use(
           access_token: newTokens.access_token,
           refresh_token: newTokens.refresh_token,
           expires_in: newTokens.expires_in,
-          nombre_completo: current.nombre_completo,
+          nombre_completo: current.Usuario.nombreCompleto
         };
 
         store.dispatch(loginSuccess(updatedUser));

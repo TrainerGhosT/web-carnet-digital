@@ -1,4 +1,4 @@
-// src/redux/slices/usuarioSlice.ts
+
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import type { UsuarioData, TipoIdentificacion, TipoUsuario, Carrera, Area } from '../../types/IUsuario';

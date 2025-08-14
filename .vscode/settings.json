@@ -1,0 +1,29 @@
+{
+    "piny.project_settings": {
+        "open-pages": [
+            "pinyfakepage.html"
+        ],
+        "app-routes": {
+            "routes": [
+                "/",
+                "/usuarios/crear",
+                "/usuarios/editar/32171f03-1b29-4a85-84b1-064c7386af09"
+            ],
+            "current_route": "/usuarios/editar/32171f03-1b29-4a85-84b1-064c7386af09"
+        },
+        "urls": {
+            "pinyfakepage.html": {
+                "open-page-views": [
+                    {
+                        "w": 660,
+                        "h": 0
+                    }
+                ]
+            }
+        },
+        "tw-external-config": {},
+        "source-folders": null,
+        "preview-url": "http://localhost:5173",
+        "ai-project-brief": null
+    }
+}

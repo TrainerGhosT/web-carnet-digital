@@ -1,431 +1,441 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/pages/Usuarios/FormUsuario.tsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Plus, X } from 'lucide-react';
-import Layout from '../../layout/Layout';
-import Button from '../../common/Button';
-
-import { 
-  crearUsuario, 
-  actualizarUsuario, 
-  obtenerUsuarioPorId,
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Save,
+  ArrowLeft,
+  Plus,
+  X,
+  User,
+  Mail,
+  IdCard,
+  Lock,
+  Briefcase,
+  Phone,
+  Users2,
+  GraduationCap,
+} from "lucide-react";
+import Button from "../../common/Button";
+import {
   obtenerTiposIdentificacion,
   obtenerTiposUsuario,
   obtenerCarreras,
-  obtenerAreas
-} from '../../../api/usuarioApi';
-import Swal from 'sweetalert2';
-import type { TipoIdentificacion, TipoUsuario, Carrera, Area, UsuarioFormData } from '../../../types/IUsuario';
+  obtenerAreas,
+} from "../../../api/usuarioApi";
+import Swal from "sweetalert2";
+import type {
+  TipoIdentificacion,
+  TipoUsuario,
+  Carrera,
+  Area,
+  UsuarioFormData,
+  ActualizarUsuarioData,
+} from "../../../types/IUsuario";
 
-const FormUsuario: React.FC = () => {
+// --- INTERFAZ DE PROPS ---
+// Define las propiedades que el formulario reutilizable aceptará.
+interface FormUsuarioProps {
+  initialData?: Partial<UsuarioFormData>;
+  onSubmit: (data: UsuarioFormData | ActualizarUsuarioData) => Promise<void>;
+  isEditMode: boolean;
+  isLoading: boolean;
+  title: string;
+}
+
+const FormUsuario: React.FC<FormUsuarioProps> = ({
+  initialData,
+  onSubmit,
+  isEditMode,
+  isLoading,
+  title,
+}) => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const esEdicion = !!id;
 
-  const [loading, setLoading] = useState(false);
-  const [tiposIdentificacion, setTiposIdentificacion] = useState<TipoIdentificacion[]>([]);
+  // --- ESTADOS DEL COMPONENTE ---
+  const [tiposIdentificacion, setTiposIdentificacion] = useState<
+    TipoIdentificacion[]
+  >([]);
   const [tiposUsuario, setTiposUsuario] = useState<TipoUsuario[]>([]);
   const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
 
   const [formData, setFormData] = useState<UsuarioFormData>({
-    correo: '',
+    correo: "",
     tipoIdentificacion: 0,
-    identificacion: '',
-    nombreCompleto: '',
-    contrasena: '',
+    identificacion: "",
+    nombreCompleto: "",
+    contrasena: "",
     tipoUsuario: 0,
     carreras: [],
     areas: [],
-    telefonos: []
+    telefonos: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [nuevoTelefono, setNuevoTelefono] = useState('');
+  const [nuevoTelefono, setNuevoTelefono] = useState("");
 
+  
+
+  // Carga los catálogos (tipos de ID, roles, etc.) al montar el componente.
   useEffect(() => {
+    const cargarCatalogos = async () => {
+      try {
+        const [tipos, usuarios, carrerasData, areasData] = await Promise.all([
+          obtenerTiposIdentificacion(),
+          obtenerTiposUsuario(),
+          obtenerCarreras(),
+          obtenerAreas(),
+        ]);
+        setTiposIdentificacion(tipos);
+        setTiposUsuario(usuarios);
+        setCarreras(carrerasData);
+        setAreas(areasData);
+      } catch (error) {
+        console.error("Error al cargar catálogos:", error);
+        Swal.fire(
+          "Error",
+          "No se pudieron cargar los datos necesarios.",
+          "error"
+        );
+      }
+    };
     cargarCatalogos();
-    if (esEdicion && id) {
-      cargarUsuario(id);
-    }
-  }, [id, esEdicion]);
+  }, []);
 
-  const cargarCatalogos = async () => {
-    try {
-      const [tipos, usuarios, carrerasData, areasData] = await Promise.all([
-        obtenerTiposIdentificacion(),
-        obtenerTiposUsuario(),
-        obtenerCarreras(),
-        obtenerAreas()
-      ]);
-
-      setTiposIdentificacion(tipos);
-      setTiposUsuario(usuarios);
-      setCarreras(carrerasData);
-      setAreas(areasData);
-    } catch (error) {
-      console.error('Error al cargar catálogos:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos necesarios',
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      });
-    }
-  };
-
-  const cargarUsuario = async (idUsuario: string) => {
-    try {
-      setLoading(true);
-      const response = await obtenerUsuarioPorId(idUsuario);
-      const usuario = response.data;
-      
+  // Popula el formulario con los datos iniciales en modo de edición.
+  useEffect(() => {
+    if (isEditMode && initialData) {
       setFormData({
-        correo: usuario.correo,
-        tipoIdentificacion: usuario.tipoIdentificacion,
-        identificacion: usuario.identificacion,
-        nombreCompleto: usuario.nombreCompleto,
-        contrasena: '', // No cargar contraseña por seguridad
-        tipoUsuario: usuario.tipoUsuario,
-        carreras: usuario.carreras.map((c: any) => c.carrera),
-        areas: usuario.areas.map((a: any) => a.area),
-        telefonos: usuario.telefonos || []
-      });
-    } catch (error) {
-      console.error('Error al cargar usuario:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo cargar el usuario',
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      });
-    } finally {
-      setLoading(false);
+        ...initialData,
+        contrasena: "", // La contraseña nunca se precarga por seguridad
+        telefonos: initialData.telefonos || [],
+        carreras: initialData.carreras || [],
+        areas: initialData.areas || [],
+      } as UsuarioFormData);
     }
-  };
+  }, [initialData, isEditMode]);
+
+  // --- MANEJADORES Y LÓGICA ---
 
   const validarFormulario = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    // Validar correo
-    if (!formData.correo) {
-      newErrors.correo = 'El correo es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
-      newErrors.correo = 'El formato del correo no es válido';
-    } else if (!formData.correo.endsWith('@cuc.cr') && !formData.correo.endsWith('@cuc.ac.cr')) {
-      newErrors.correo = 'El correo debe ser del dominio @cuc.cr o @cuc.ac.cr';
-    }
-
-    // Validar tipo de identificación
-    if (!formData.tipoIdentificacion) {
-      newErrors.tipoIdentificacion = 'El tipo de identificación es requerido';
-    }
-
-    // Validar identificación
-    if (!formData.identificacion.trim()) {
-      newErrors.identificacion = 'La identificación es requerida';
-    }
-
-    // Validar nombre completo
-    if (!formData.nombreCompleto.trim()) {
-      newErrors.nombreCompleto = 'El nombre completo es requerido';
-    }
-
-    // Validar contraseña (solo en creación)
-    if (!esEdicion && !formData.contrasena) {
-      newErrors.contrasena = 'La contraseña es requerida';
-    }
-
-    // Validar tipo de usuario
-    if (!formData.tipoUsuario) {
-      newErrors.tipoUsuario = 'El tipo de usuario es requerido';
-    }
-
-    // Validar lógica de dominio y tipo de usuario
+    // La lógica de validación se mantiene, ya que diferencia entre edición y creación.
+    if (!formData.correo) newErrors.correo = "El correo es requerido";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo))
+      newErrors.correo = "El formato del correo no es válido";
+    else if (
+      !formData.correo.endsWith("@cuc.cr") &&
+      !formData.correo.endsWith("@cuc.ac.cr")
+    )
+      newErrors.correo = "El correo debe ser del dominio @cuc.cr o @cuc.ac.cr";
+    if (!formData.tipoIdentificacion)
+      newErrors.tipoIdentificacion = "El tipo de identificación es requerido";
+    if (!formData.identificacion.trim())
+      newErrors.identificacion = "La identificación es requerida";
+    if (!formData.nombreCompleto.trim())
+      newErrors.nombreCompleto = "El nombre completo es requerido";
+    if (!isEditMode && !formData.contrasena)
+      newErrors.contrasena = "La contraseña es requerida";
+    if (!formData.tipoUsuario)
+      newErrors.tipoUsuario = "El tipo de usuario es requerido";
     if (formData.correo && formData.tipoUsuario) {
-      if (formData.correo.endsWith('@cuc.cr') && formData.tipoUsuario !== 1) {
-        newErrors.tipoUsuario = 'Los usuarios con dominio @cuc.cr deben ser estudiantes';
-      }
-      if (formData.correo.endsWith('@cuc.ac.cr') && formData.tipoUsuario === 1) {
-        newErrors.tipoUsuario = 'Los usuarios con dominio @cuc.ac.cr deben ser funcionarios o administradores';
-      }
+      if (formData.correo.endsWith("@cuc.cr") && formData.tipoUsuario !== 1)
+        newErrors.tipoUsuario =
+          "Los usuarios con dominio @cuc.cr deben ser Estudiantes";
+      if (formData.correo.endsWith("@cuc.ac.cr") && formData.tipoUsuario === 1)
+        newErrors.tipoUsuario =
+          "Los usuarios con dominio @cuc.ac.cr no pueden ser Estudiantes";
     }
-
-    // Validar carreras/áreas según tipo de usuario
-    if (formData.tipoUsuario === 1 && formData.carreras.length === 0) {
-      newErrors.carreras = 'Los estudiantes deben tener al menos una carrera asociada';
-    }
-    if (formData.tipoUsuario === 2 && formData.areas.length === 0) {
-      newErrors.areas = 'Los funcionarios deben tener al menos un área asociada';
-    }
-
+    if (formData.tipoUsuario === 1 && formData.carreras?.length === 0)
+      newErrors.carreras =
+        "Los estudiantes deben tener al menos una carrera asociada";
+    if (formData.tipoUsuario === 3 && formData.areas?.length === 0)
+      newErrors.areas =
+        "Los administradores deben tener al menos un área asociada";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validarFormulario()) {
+      Swal.fire(
+        "Atención",
+        "Por favor, corrija los errores en el formulario.",
+        "warning"
+      );
       return;
     }
-
-    try {
-      setLoading(true);
-      
-      if (esEdicion && id) {
-        await actualizarUsuario(id, formData);
-        Swal.fire({
-          title: '¡Éxito!',
-          text: 'Usuario actualizado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        });
-      } else {
-        await crearUsuario(formData);
-        Swal.fire({
-          title: '¡Éxito!',
-          text: 'Usuario creado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        });
-      }
-
-      navigate('/usuarios');
-    } catch (error) {
-      console.error('Error al guardar usuario:', error);
-      Swal.fire({
-        title: 'Error',
-        text: `No se pudo ${esEdicion ? 'actualizar' : 'crear'} el usuario`,
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      });
-    } finally {
-      setLoading(false);
-    }
+    // Llama a la función onSubmit que viene de las props del componente padre.
+    await onSubmit(formData);
   };
 
   const handleInputChange = (field: keyof UsuarioFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Limpiar error del campo
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const agregarTelefono = () => {
-    if (nuevoTelefono.trim()) {
-      setFormData(prev => ({
+    if (nuevoTelefono.trim() && /^[0-9]+$/.test(nuevoTelefono.trim())) {
+      setFormData((prev) => ({
         ...prev,
-        telefonos: [...prev.telefonos, { numero: nuevoTelefono.trim() }]
+        telefonos: [...prev.telefonos, { numero: nuevoTelefono.trim() }],
       }));
-      setNuevoTelefono('');
+      setNuevoTelefono("");
+    } else {
+      Swal.fire("Atención", "Ingrese un número de teléfono válido.", "warning");
     }
   };
 
   const eliminarTelefono = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      telefonos: prev.telefonos.filter((_, i) => i !== index)
+      telefonos: prev.telefonos.filter((_, i) => i !== index),
     }));
   };
 
   const handleCarreraChange = (carreraId: number, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       carreras: checked
-        ? [...prev.carreras, carreraId]
-        : prev.carreras.filter(id => id !== carreraId)
+        ? [...(prev.carreras || []), carreraId]
+        : prev.carreras?.filter((id) => id !== carreraId),
     }));
   };
 
   const handleAreaChange = (areaId: number, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       areas: checked
-        ? [...prev.areas, areaId]
-        : prev.areas.filter(id => id !== areaId)
+        ? [...(prev.areas || []), areaId]
+        : (prev.areas || []).filter((id) => id !== areaId),
     }));
   };
 
-  const puedeSeleccionarCarreras = () => {
-    return formData.tipoUsuario === 1 || formData.tipoUsuario === 3; // Estudiante o Admin
-  };
+  const puedeSeleccionarCarreras = () =>
+    formData.tipoUsuario === 1 || formData.tipoUsuario === 2;
+  const puedeSeleccionarAreas = () =>
+    formData.tipoUsuario === 2 || formData.tipoUsuario === 3;
 
-  const puedeSeleccionarAreas = () => {
-    return formData.tipoUsuario === 2 || formData.tipoUsuario === 3; // Funcionario o Admin
-  };
+  const renderInputField = (
+    id: string,
+    label: string,
+    type: string,
+    value: string,
+    field: keyof UsuarioFormData,
+    icon: React.ReactNode,
+    placeholder: string,
+    required = true
+  ) => (
+    <div>
+      <label
+        htmlFor={id}
+        className="block mb-2 text-sm font-medium text-gray-700"
+      >
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <span className="flex absolute inset-y-0 left-0 items-center pl-3 text-blue-500">
+          {icon}
+        </span>
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => handleInputChange(field, e.target.value)}
+          className={`w-full pl-10 pr-3 py-2.5 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors[field] ? "border-red-500 bg-red-50" : "border-gray-300"
+          }`}
+          placeholder={placeholder}
+        />
+      </div>
+      {errors[field] && (
+        <p className="mt-1 text-sm text-red-500">{errors[field]}</p>
+      )}
+    </div>
+  );
 
   return (
-    <Layout>
-      <div className="p-6 bg-white rounded-lg shadow">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => navigate('/usuarios')}
-              variant="secondary"
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft size={16} />
-              Volver
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-800">
-              {esEdicion ? 'Editar Usuario' : 'Crear Usuario'}
-            </h1>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información básica */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Correo Electrónico *
-                </label>
-                <input
-                  type="email"
-                  value={formData.correo}
-                  onChange={(e) => handleInputChange('correo', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.correo ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="usuario@cuc.cr"
-                />
-                {errors.correo && (
-                  <p className="mt-1 text-sm text-red-600">{errors.correo}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Tipo de Identificación *
-                </label>
+    <>
+      <div className="flex gap-3 items-center mb-8">
+        <Button
+          onClick={() => navigate("/usuarios")}
+          variant="secondary"
+          className="!p-2 rounded-full hover:bg-gray-100"
+        >
+          <ArrowLeft size={20} />
+        </Button>
+        <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
+      </div>
+      <form
+        onSubmit={handleSubmit}
+        className="p-10 space-y-8 bg-white rounded-2xl border border-gray-100 shadow-xl"
+      >
+        {/* Sección Información Personal */}
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-blue-700">
+            Información Personal
+          </h2>
+          <div className="grid grid-cols-2 gap-8">
+            {renderInputField(
+              "nombreCompleto",
+              "Nombre Completo",
+              "text",
+              formData.nombreCompleto,
+              "nombreCompleto",
+              <User size={20} />,
+              "Ej: Juan Pérez"
+            )}
+            {renderInputField(
+              "correo",
+              "Correo Electrónico",
+              "email",
+              formData.correo,
+              "correo",
+              <Mail size={20} />,
+              "usuario@cuc.cr"
+            )}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Tipo de Identificación <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="flex absolute inset-y-0 left-0 items-center pl-3 text-blue-500">
+                  <IdCard size={20} />
+                </span>
                 <select
+                  id="tipoIdentificacion"
                   value={formData.tipoIdentificacion}
-                  onChange={(e) => handleInputChange('tipoIdentificacion', Number(e.target.value))}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.tipoIdentificacion ? 'border-red-500' : 'border-gray-300'
+                  onChange={(e) =>
+                    handleInputChange(
+                      "tipoIdentificacion",
+                      Number(e.target.value)
+                    )
+                  }
+                  className={`w-full pl-10 pr-3 py-2.5 border rounded-lg appearance-none bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.tipoIdentificacion
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-300"
                   }`}
                 >
                   <option value={0}>Seleccione un tipo</option>
-                  {tiposIdentificacion.map(tipo => (
-                    <option key={tipo.idTipoIdentificacion} value={tipo.idTipoIdentificacion}>
-                      {tipo.nombre}
+                  {tiposIdentificacion.map((t) => (
+                    <option
+                      key={t.idTipoIdentificacion}
+                      value={t.idTipoIdentificacion}
+                    >
+                      {t.nombre}
                     </option>
                   ))}
                 </select>
-                {errors.tipoIdentificacion && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tipoIdentificacion}</p>
-                )}
               </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Identificación *
-                </label>
-                <input
-                  type="text"
-                  value={formData.identificacion}
-                  onChange={(e) => handleInputChange('identificacion', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.identificacion ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="123456789"
-                />
-                {errors.identificacion && (
-                  <p className="mt-1 text-sm text-red-600">{errors.identificacion}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nombreCompleto}
-                  onChange={(e) => handleInputChange('nombreCompleto', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.nombreCompleto ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Juan Pérez González"
-                />
-                {errors.nombreCompleto && (
-                  <p className="mt-1 text-sm text-red-600">{errors.nombreCompleto}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Contraseña {!esEdicion && '*'}
-                </label>
-                <input
-                  type="password"
-                  value={formData.contrasena}
-                  onChange={(e) => handleInputChange('contrasena', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.contrasena ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder={esEdicion ? "Dejar vacío para no cambiar" : "Ingrese contraseña"}
-                />
-                {errors.contrasena && (
-                  <p className="mt-1 text-sm text-red-600">{errors.contrasena}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Tipo de Usuario *
-                </label>
-                <select
-                  value={formData.tipoUsuario}
-                  onChange={(e) => handleInputChange('tipoUsuario', Number(e.target.value))}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.tipoUsuario ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value={0}>Seleccione un tipo</option>
-                  {tiposUsuario.map(tipo => (
-                    <option key={tipo.idTipoUsuario} value={tipo.idTipoUsuario}>
-                      {tipo.nombre}
-                    </option>
-                  ))}
-                </select>
-                {errors.tipoUsuario && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tipoUsuario}</p>
-                )}
-              </div>
+              {errors.tipoIdentificacion && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.tipoIdentificacion}
+                </p>
+              )}
             </div>
+            {renderInputField(
+              "identificacion",
+              "Identificación",
+              "text",
+              formData.identificacion,
+              "identificacion",
+              <IdCard size={20} />,
+              "123456789"
+            )}
+          </div>
+        </section>
 
-            {/* Carreras (solo para estudiantes y administradores) */}
+        {/* Sección Credenciales y Rol */}
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-blue-700">
+            Credenciales y Rol
+          </h2>
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-1">
+            {renderInputField(
+              "contrasena",
+              "Contraseña",
+              "password",
+              formData.contrasena,
+              "contrasena",
+              <Lock size={20} />,
+              isEditMode ? "Dejar vacío para no cambiar" : "********",
+              !isEditMode
+            )}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Tipo de Usuario <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {tiposUsuario.map((t) => (
+                  <label
+                    key={t.idTipoUsuario}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full border cursor-pointer transition-all ${
+                      formData.tipoUsuario === t.idTipoUsuario
+                        ? "bg-blue-100 border-blue-500 text-blue-700 font-semibold"
+                        : "bg-gray-50 border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    <Users2 size={16} className="text-blue-500" />
+                    <input
+                      type="radio"
+                      checked={formData.tipoUsuario === t.idTipoUsuario}
+                      onChange={() =>
+                        handleInputChange("tipoUsuario", t.idTipoUsuario)
+                      }
+                      className="sr-only"
+                    />
+                    {t.nombre}
+                  </label>
+                ))}
+              </div>
+              {errors.tipoUsuario && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.tipoUsuario}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Sección Carreras y Áreas */}
+        <section>
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-1">
             {puedeSeleccionarCarreras() && (
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Carreras {formData.tipoUsuario === 1 ? '*' : ''}
+                <label className="block mb-2 font-semibold text-gray-700 text-md">
+                  Carreras{" "}
+                  {formData.tipoUsuario === 1 && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </label>
-                <div className="grid grid-cols-1 gap-2 p-3 overflow-y-auto border border-gray-300 rounded-md md:grid-cols-2 lg:grid-cols-3 max-h-40">
-                  {carreras.map(carrera => (
-                    <label key={carrera.idCarrera} className="flex items-center space-x-2">
+                <div className="flex flex-wrap gap-2">
+                  {carreras.map((carrera) => (
+                    <label
+                      key={carrera.idCarrera}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-full border cursor-pointer transition-all ${
+                        formData.carreras?.includes(carrera.idCarrera)
+                          ? "bg-green-100 border-green-500 text-green-700 font-semibold"
+                          : "bg-gray-50 border-gray-200 text-gray-700"
+                      }`}
+                    >
+                      <GraduationCap size={20} className="text-green-600" />
                       <input
                         type="checkbox"
-                        checked={formData.carreras.includes(carrera.idCarrera)}
-                        onChange={(e) => handleCarreraChange(carrera.idCarrera, e.target.checked)}
-                        className="text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        value={carrera.idCarrera}
+                        checked={formData.carreras?.includes(carrera.idCarrera)}
+                        onChange={(e) =>
+                          handleCarreraChange(
+                            carrera.idCarrera,
+                            e.target.checked
+                          )
+                        }
+                        className="sr-only"
                       />
-                      <span className="text-sm text-gray-700">{carrera.nombre}</span>
+                      {carrera.nombre}
                     </label>
                   ))}
                 </div>
@@ -434,23 +444,35 @@ const FormUsuario: React.FC = () => {
                 )}
               </div>
             )}
-
-            {/* Áreas (solo para funcionarios y administradores) */}
             {puedeSeleccionarAreas() && (
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">
-                  Áreas {formData.tipoUsuario === 2 ? '*' : ''}
+                <label className="block mb-2 font-semibold text-gray-700 text-md">
+                  Áreas de Trabajo{" "}
+                  {formData.tipoUsuario === 3 && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </label>
-                <div className="grid grid-cols-1 gap-2 p-3 overflow-y-auto border border-gray-300 rounded-md md:grid-cols-2 lg:grid-cols-3 max-h-40">
-                  {areas.map(area => (
-                    <label key={area.idArea} className="flex items-center space-x-2">
+                <div className="flex flex-wrap gap-2">
+                  {areas.map((area) => (
+                    <label
+                      key={area.idArea}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-full border cursor-pointer transition-all ${
+                        formData.areas?.includes(area.idArea)
+                          ? "bg-purple-100 border-purple-500 text-purple-700 font-semibold"
+                          : "bg-gray-50 border-gray-200 text-gray-700"
+                      }`}
+                    >
+                      <Briefcase size={20} className="text-purple-500" />
                       <input
                         type="checkbox"
-                        checked={formData.areas.includes(area.idArea)}
-                        onChange={(e) => handleAreaChange(area.idArea, e.target.checked)}
-                        className="text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        value={area.idArea}
+                        checked={formData.areas?.includes(area.idArea)}
+                        onChange={(e) =>
+                          handleAreaChange(area.idArea, e.target.checked)
+                        }
+                        className="sr-only"
                       />
-                      <span className="text-sm text-gray-700">{area.nombre}</span>
+                      {area.nombre}
                     </label>
                   ))}
                 </div>
@@ -459,77 +481,83 @@ const FormUsuario: React.FC = () => {
                 )}
               </div>
             )}
+          </div>
+        </section>
 
-            {/* Teléfonos */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Teléfonos de Contacto
-              </label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={nuevoTelefono}
-                    onChange={(e) => setNuevoTelefono(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ingrese número de teléfono"
-                  />
-                  <Button
+        {/* Sección Teléfonos de Contacto */}
+        <section className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+          <label className="block mb-3 text-sm font-medium text-gray-700">
+            Teléfonos de Contacto
+          </label>
+          <div className="flex relative gap-2 mb-4">
+            <span className="flex absolute inset-y-0 left-0 items-center pl-3 text-blue-500">
+              <Phone size={20} />
+            </span>
+            <input
+              type="text"
+              value={nuevoTelefono}
+              onChange={(e) => setNuevoTelefono(e.target.value)}
+              className="py-2 pr-3 pl-10 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ingrese número de teléfono"
+            />
+            <Button
+              type="button"
+              onClick={agregarTelefono}
+              variant="secondary"
+              className="flex gap-2 items-center text-blue-700 bg-blue-50 hover:bg-blue-100"
+            >
+              <Plus size={16} /> Agregar
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.telefonos.length > 0 ? (
+              formData.telefonos.map((telefono, index) => (
+                <span
+                  key={index}
+                  className="flex gap-2 items-center px-3 py-1 font-medium text-blue-800 bg-blue-100 rounded-full border border-blue-200"
+                >
+                  <Phone size={16} /> {telefono.numero}
+                  <button
                     type="button"
-                    onClick={agregarTelefono}
-                    variant="secondary"
-                    className="flex items-center gap-2"
+                    onClick={() => eliminarTelefono(index)}
+                    className="ml-1 text-red-500 hover:text-red-700"
                   >
-                    <Plus size={16} />
-                    Agregar
-                  </Button>
-                </div>
-                
-                {formData.telefonos.length > 0 && (
-                  <div className="space-y-2">
-                    {formData.telefonos.map((telefono, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-gray-50">
-                        <span className="flex-1 text-sm">{telefono.numero}</span>
-                        <button
-                          type="button"
-                          onClick={() => eliminarTelefono(index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+                    <X size={16} />
+                  </button>
+                </span>
+              ))
+            ) : (
+              <span className="text-gray-400">
+                No hay teléfonos registrados
+              </span>
+            )}
+          </div>
+        </section>
 
-            {/* Botones de acción */}
-            <div className="flex justify-end pt-6 space-x-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => navigate('/usuarios')}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-b-2 border-white rounded-full animate-spin"></div>
-                ) : (
-                  <Save size={16} />
-                )}
-                {esEdicion ? 'Actualizar' : 'Crear'} Usuario
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </Layout>
+        <div className="flex gap-4 justify-end pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/usuarios")}
+            className="hover:bg-gray-100"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="flex gap-2 items-center bg-blue-600 hover:bg-blue-700"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 rounded-full border-b-2 border-white animate-spin"></div>
+            ) : (
+              <Save size={20} />
+            )}
+            {isEditMode ? "Actualizar Usuario" : "Crear Usuario"}
+          </Button>
+        </div>
+      </form>
+    </>
   );
 };
 
