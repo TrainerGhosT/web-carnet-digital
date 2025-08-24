@@ -20,6 +20,16 @@ import CrearUsuarioPage from "./components/pages/Usuarios/CrearUsuarioPage";
 import EditarUsuarioPage from "./components/pages/Usuarios/EditarUsuarioPage";
 import UsuarioQrPage from "./components/pages/Qr/UsuarioQrPage";
 import VerUsuario from "./components/pages/Usuarios/VerUsuario";
+import CreateArea from "./components/pages/Areas/CreateArea";
+import ListAreas from "./components/pages/Areas/ListAreas";
+import DeleteArea from "./components/pages/Areas/DeleteArea";
+import EditArea from "./components/pages/Areas/EditArea";
+import SeeArea from "./components/pages/Areas/SeeArea";
+import CreateCarrera from "./components/pages/Carreras/CreateCarrera";
+import EditCarrera from "./components/pages/Carreras/EditCarrera";
+import ListCarreras from "./components/pages/Carreras/ListCarreras";
+import SeeCarrera from "./components/pages/Carreras/SeeCarrera";
+import FotografiaUsuario from "./components/pages/Fotografia/FotografiaUsuario";
 
 // Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -64,6 +74,8 @@ const App: React.FC = () => {
         <Route path="/usuarios/crear" element={<CrearUsuarioPage />} />
         <Route path="/usuarios/editar/:id" element={<EditarUsuarioPage />} />
 
+        <Route path="/fotografia" element={<FotografiaUsuario />} />
+
         <Route
           path="/cambiar-estado"
           element={
@@ -74,6 +86,19 @@ const App: React.FC = () => {
         />
 
         <Route path="/generar-qr/" element={<UsuarioQrPage />} />
+
+        <Route path="/area" element={<ListAreas />} />
+        <Route path="/area/crear" element={<CreateArea />} />
+        <Route path="/area/editar/:id" element={<EditArea />} />
+        <Route path="/area/eliminar" element={<DeleteArea />} />
+        <Route path="/area/:id" element={<SeeArea />} />
+
+        {/* Rutas para Carreras */}
+        <Route path="/carrera" element={<ListCarreras />} />
+        <Route path="/carrera/crear" element={<CreateCarrera />} />
+        <Route path="/carrera/editar/:id" element={<EditCarrera />} />
+        {/* <Route path="/carrera/eliminar"  element={<DeleteCarrera />} /> */}
+        <Route path="/carrera/:id" element={<SeeCarrera />} />
 
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -11,11 +11,14 @@ import {
   IdCard, 
   Camera, 
   QrCode, 
-  Building, 
+  
   ToggleLeft,
   ChevronRight,
   LogOut,
-  Settings
+  Settings,
+  UserCog2,
+  BriefcaseBusiness,
+ 
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
@@ -48,6 +51,11 @@ const Sidebar: React.FC = () => {
           label: "Fotografía",
           icon: Camera,
         },
+         {
+          to: "/generar-qr",
+          label: "Generar QR",
+          icon: QrCode,
+        },
       ],
     },
     {
@@ -56,7 +64,7 @@ const Sidebar: React.FC = () => {
       children: [
         {
           to: "/carrera",
-          label: "Carreras",
+          label: "Gestión de Carreras",
           icon: GraduationCap,
           
         },
@@ -73,15 +81,17 @@ const Sidebar: React.FC = () => {
         {
           to: "/area",
           label: "Áreas de Trabajo",
-          icon: Building,
+          icon: BriefcaseBusiness,
         },
+
+        {
+          to: "/estados",
+          label: "Gestion de Estados",
+          icon: UserCog2,
+        }
       ],
     },
-    {
-      to: "/generar-qr",
-      label: "Generar QR",
-      icon: QrCode,
-    },
+   
   ];
 
   // Mantener abierto el submenú si algún hijo está activo
@@ -122,12 +132,12 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <section className="flex flex-col w-64 h-full bg-gradient-to-b shadow-2xl from-slate-900 via-slate-800 to-slate-900 bg-slate-900">
-    <div className="flex flex-col w-64 h-full text-white bg-gradient-to-b shadow-2xl from-slate-900 via-slate-800 to-slate-900">
+    <section className="flex flex-col w-64 h-full shadow-2xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 bg-slate-900">
+    <div className="flex flex-col w-64 h-full text-white shadow-2xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
 
       <div className="flex items-center px-6 py-8 border-b border-slate-800/50">
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg opacity-25 blur"></div>
+          <div className="absolute rounded-lg opacity-25 -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 blur"></div>
           <div className="relative p-2 rounded-lg bg-slate-800">
             <Shield className="w-6 h-6 text-blue-400 drop-shadow-lg" />
           </div>
@@ -141,7 +151,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Menu Items */}
-      <div className="overflow-y-auto flex-1 px-3 py-6 space-y-1">
+      <div className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
         {menuItems.map((item, index) => (
           <div key={index}>
             {item.children ? (
@@ -156,7 +166,7 @@ const Sidebar: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center">
-                    <item.icon className="mr-3 w-5 h-5" />
+                    <item.icon className="w-5 h-5 mr-3" />
                     <span className="font-medium">{item.label}</span>
                   </div>
                   <ChevronRight
@@ -177,7 +187,7 @@ const Sidebar: React.FC = () => {
                             : "border-transparent text-slate-400 hover:bg-slate-800/30 hover:border-indigo-600 hover:text-slate-300"
                         }`}
                       >
-                        <child.icon className="mr-3 w-5 h-5" />
+                        <child.icon className="w-5 h-5 mr-3" />
                         <span className="text-sm font-medium">{child.label}</span>
                       </Link>
                     ))}
@@ -194,7 +204,7 @@ const Sidebar: React.FC = () => {
                     : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                 }`}
               >
-                <item.icon className="mr-3 w-6 h-6" />
+                <item.icon className="w-6 h-6 mr-3" />
                 <span className="font-medium">{item.label}</span>
               </Link>
             )}
@@ -206,9 +216,9 @@ const Sidebar: React.FC = () => {
       <div className="p-4 border-t border-slate-700/50">
         <button
           onClick={handleLogout}
-          className="flex items-center px-4 py-3 w-full rounded-xl border border-transparent transition-all duration-200 text-slate-300 hover:text-white hover:bg-red-900/20 hover:border-red-500/50 group"
+          className="flex items-center w-full px-4 py-3 transition-all duration-200 border border-transparent rounded-xl text-slate-300 hover:text-white hover:bg-red-900/20 hover:border-red-500/50 group"
         >
-          <LogOut className="mr-3 w-5 h-5 group-hover:text-red-400" />
+          <LogOut className="w-5 h-5 mr-3 group-hover:text-red-400" />
           <span className="font-medium">Cerrar Sesión</span>
         </button>
       </div>

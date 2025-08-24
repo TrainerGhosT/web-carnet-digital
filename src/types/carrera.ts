@@ -3,7 +3,7 @@ export interface Carrera {
   nombre: string;
   director: string;
   email: string;
-  telefono: number;
+  telefono: string;
 }
 
 export interface CarreraState {

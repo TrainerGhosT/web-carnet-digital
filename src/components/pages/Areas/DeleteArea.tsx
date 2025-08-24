@@ -1,11 +1,14 @@
-import { useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAreas, deleteArea } from "../../../redux/slices/areaSlice";  // Asegúrate de que 'deleteArea' esté exportada
-import type { RootState, AppDispatch } from "../../../redux/store";
-import type { Area } from "../../../types/area";
 import Layout from "../../layout/Layout";
+import { deleteArea as apiDeleteArea } from "../../../api/areaAPI";
+import type { RootState, AppDispatch } from "../../../redux/store";
+import Swal from "sweetalert2";
 
-const ListAreas = () => {
+const DeleteArea: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { areas, loading, error } = useSelector((state: RootState) => state.areas);
 
@@ -18,69 +21,56 @@ const ListAreas = () => {
 
   // Función para eliminar un área
   const handleDelete = async (id: number) => {
+    if (!confirm("¿Eliminar área?")) return;
     try {
+      await apiDeleteArea(id);
       await dispatch(deleteArea(id));  // Llamamos a la acción deleteArea con id como number
     } catch (error) {
       console.error("Error al eliminar el área:", error);
+      Swal.fire('Error', 'No se pudo eliminar la área', 'error');
     }
   };
 
   return (
     <Layout>
-      <div className="bg-white shadow rounded-lg p-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Listado de Áreas de Trabajo
+      <div className="p-6 text-center bg-white rounded-lg shadow">
+        <h1 className="mb-4 text-2xl font-bold text-gray-800">
+          Eliminar Áreas de Trabajo
         </h1>
 
-        {/* Áreas registradas */}
-        <div className="mt-6 p-6 bg-blue-100 rounded-lg border border-blue-100">
-          <h2 className="text-xl font-semibold text-blue-800 mb-3">
-            Áreas Registradas
-          </h2>
-
-          {loading && <p className="text-blue-700 font-medium">Cargando...</p>}
+        <div className="p-6 mt-6 bg-blue-100 border border-blue-100 rounded-lg">
+          {loading && <p className="font-medium text-blue-700">Cargando...</p>}
           {error && <p className="text-red-500">{error}</p>}
 
-          <ul className="space-y-2 text-left mt-4">
-            {Array.isArray(areas) &&
-              areas.map((area: Area) => (
-                <li key={area.idArea} className="bg-white p-3 shadow rounded">
-                  <div className="flex justify-between items-center">
-                    <p className="text-gray-700 font-medium">{area.nombre}</p>
-                    <div>
-                      {/* Eliminar */}
-                      <button
-                        onClick={() => handleDelete(area.idArea)}  // El ID ahora es un number y se pasa correctamente
-                        className="mr-2 text-red-500 p-2 rounded-md hover:scale-105 hover:bg-red-600 hover:text-white transition-all duration-200 ease-in-out"
-                      >
-                        Eliminar
-                      </button>
-                      {/* Editar */}
-                      <button
-                        onClick={() => console.log("Editar", area.idArea)}
-                        className="mr-2 text-yellow-500 p-2 rounded-md hover:scale-105 hover:bg-yellow-600 hover:text-white transition-all duration-200 ease-in-out"
-                      >
-                        Editar
-                      </button>
+          <ul className="mt-4 space-y-2 text-left">
+            {Array.isArray(areas) && areas.length > 0 ? (
+              areas.map((area) => {
+                const idVal = (area as any).id ?? (area as any).idArea;
+                const nombre = (area as any).nombre ?? (area as any).name ?? "-";
+                return (
+                  <li key={String(idVal)} className="p-3 bg-white rounded shadow">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-gray-700">{nombre}</p>
+                      <div>
+                        <button
+                          onClick={() => handleDelete(Number(idVal))}
+                          className="p-2 mr-2 text-red-500 transition-all duration-200 ease-in-out rounded-md hover:scale-105 hover:bg-red-600 hover:text-white"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })
+            ) : (
+              <li className="text-gray-600">No hay áreas para eliminar.</li>
+            )}
           </ul>
-
-          {/* Botón para Crear Nueva Área */}
-          <div className="mt-6">
-            <button
-              onClick={() => console.log("Crear nueva área")}
-              className="p-2 bg-green-500 text-white rounded-md"
-            >
-              Crear Área
-            </button>
-          </div>
         </div>
       </div>
     </Layout>
   );
 };
 
-export default ListAreas;
+export default DeleteArea;

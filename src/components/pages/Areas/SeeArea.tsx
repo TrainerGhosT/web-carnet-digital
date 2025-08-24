@@ -1,77 +1,79 @@
-import { useState } from "react";
-import axios from "axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Layout from "../../layout/Layout";
 import type { Area } from "../../../types/area";
+import { fetchAreaById, deleteArea as apiDeleteArea } from "../../../api/areaAPI";
 
-const SeeArea = () => {
-  const [idInput, setIdInput] = useState<string>("");
+const SeeArea: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
-  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setArea(null);
-
-    const id = parseInt(idInput.trim());
-    if (isNaN(id) || id <= 0) {
-      setError("⚠️ Ingrese un ID válido (mayor que 0)");
-      return;
-    }
-
-    try {
-      const response = await axios.get(`http://localhost:3002/area/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Asegúrate que esté guardado
-        },
-      });
-
-      // Mapeamos idArea → id para que coincida con la interfaz Area
-    const data = response.data.data;
-    const parsed: Area = {
-    id: data.idArea,
-    nombre: data.nombre,
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      try {
+        const data = await fetchAreaById(Number(id));
+        setArea(data);
+      } catch {
+        alert("Error al obtener área");
+      } finally {
+        setLoading(false);
+      }
     };
+    load();
+  }, [id]);
 
-    setArea(parsed);
-    } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-            setError(`❌ Error: ${err.response?.data?.message || "No se pudo obtener el área"}`);
-        } else {
-            setError("❌ Error inesperado al buscar el área");
-        }
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!confirm("¿Eliminar área?")) return;
+    try {
+      await apiDeleteArea(Number(id));
+      navigate("/area");
+    } catch {
+      alert("Error al eliminar área");
     }
   };
 
+  if (loading) return <Layout><p className="p-6">Cargando...</p></Layout>;
+  if (!area) return <Layout><p className="p-6">Área no encontrada</p></Layout>;
+
+  const nombre = (area as any).nombre ?? (area as any).name ?? "-";
+  const descripcion = (area as any).descripcion ?? (area as any).description ?? "-";
+  const idVal = (area as any).id ?? (area as any).idArea;
+
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-4">Buscar area por identificador</h1>
+    <Layout>
+      <div className="p-6 bg-white rounded-lg shadow">
+        <h2 className="mb-4 text-2xl font-semibold">Detalle Área</h2>
+        <p className="mb-2"><strong>ID:</strong> {idVal}</p>
+        <p className="mb-2"><strong>Nombre:</strong> {nombre}</p>
+        <p className="mb-4"><strong>Descripción:</strong> {descripcion}</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="number"
-          className="w-full border border-gray-300 p-2 rounded"
-          placeholder="Ingrese el ID del área"
-          value={idInput}
-          onChange={(e) => setIdInput(e.target.value)}
-        />
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-        >
-          Buscar
-        </button>
-      </form>
-
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-
-      {area && (
-        <div className="mt-6 p-4 bg-white shadow rounded">
-          <p><strong>Identificador del área de trabajo:</strong> {area.id}</p>
-          <p><strong>Nombre del área de trabajo:</strong> {area.nombre}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/area/editar/${idVal}`)}
+            className="px-4 py-2 text-white bg-yellow-500 rounded-md"
+          >
+            Editar
+          </button>
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 text-white bg-red-500 rounded-md"
+          >
+            Eliminar
+          </button>
+          <button
+            onClick={() => navigate("/area")}
+            className="px-4 py-2 bg-gray-200 rounded-md"
+          >
+            Volver
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 

@@ -86,6 +86,20 @@ export const obtenerFotoPerfil = async (usuarioId: string) => {
   return response.data;
 };
 
+export const actualizarFotografiaUsuario = async (usuarioId: string , fotografia: string) => {
+  const response = await api.post(`${AUTH_SERVICE_URL}/usuario/fotografia`, {
+    usuarioId, fotografia
+  });
+  console.log('Dato actualizar fotografia:', usuarioId, fotografia);
+
+  return response.data;
+};
+
+export const eliminarFotografiaUsuario = async (usuarioId: string) => {
+  const response = await api.delete(`${AUTH_SERVICE_URL}/usuario/fotografia/${usuarioId}`);
+  return response.data;
+};
+
 // APIs para obtener catálogos
 export const obtenerTiposIdentificacion = async (): Promise<
   TipoIdentificacion[]

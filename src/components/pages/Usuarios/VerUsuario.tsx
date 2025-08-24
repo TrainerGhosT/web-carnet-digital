@@ -36,9 +36,11 @@ import type {
   UsuarioData,
 } from "../../../types/IUsuario";
 
+// Ajuste en la interfaz para que coincida con lo que devuelve el backend
 interface FotoPerfil {
-  usuario: string;
-  fotoBase64: string;
+  fotografia?: string; // normalmente: 'data:image/png;base64,...'
+  usuarioId?: string;
+  fechaActualizacion?: string;
 }
 
 const VerUsuario: React.FC = () => {
@@ -73,6 +75,7 @@ const VerUsuario: React.FC = () => {
         navigate("/usuarios");
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate]);
 
   const cargarDatos = async () => {
@@ -97,15 +100,15 @@ const VerUsuario: React.FC = () => {
       ]);
 
       // Configurar datos del usuario
-      setUsuario(usuarioResponse.data);
+      setUsuario(usuarioResponse.data ?? usuarioResponse);
       setTiposIdentificacion(tiposIdentData);
       setTiposUsuario(tiposUserData);
       setCarreras(carrerasData);
       setAreas(areasData);
       setEstados(estadosData);
 
-      // Intentar cargar foto de perfil
-      cargarFotoPerfil();
+      // Intentar cargar foto de perfil (esperamos a que termine)
+      await cargarFotoPerfil();
     } catch (error: any) {
       console.error("Error al cargar datos:", error);
 
@@ -133,10 +136,15 @@ const VerUsuario: React.FC = () => {
     try {
       setLoadingPhoto(true);
       const fotoResponse = await obtenerFotoPerfil(id!);
-      setFotoPerfil(fotoResponse.data);
-    } catch {
+
+      // importante: obtenerFotoPerfil ya devuelve response.data (según api file)
+      // por eso aquí asignamos directamente el objeto devuelto.
+      setFotoPerfil(fotoResponse);
+      console.log("fotoResponse:", fotoResponse);
+    } catch (err) {
       // No mostrar error si no tiene foto, es opcional
-      console.log("El usuario no tiene foto de perfil");
+      console.log("El usuario no tiene foto de perfil o hubo error al obtenerla", err);
+      setFotoPerfil(null);
     } finally {
       setLoadingPhoto(false);
     }
@@ -203,10 +211,10 @@ const VerUsuario: React.FC = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="min-h-screen p-6 bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-center h-96">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
           </div>
         </div>
@@ -217,15 +225,15 @@ const VerUsuario: React.FC = () => {
   if (!usuario) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="min-h-screen p-6 bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+            <div className="p-8 text-center bg-white shadow-lg rounded-xl">
+              <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+              <h2 className="mb-2 text-2xl font-bold text-gray-900">Error</h2>
               <p className="text-gray-600">Usuario no encontrado</p>
               <button
                 onClick={handleNavigateBack}
-                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 mt-6 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 Volver a usuarios
               </button>
@@ -236,22 +244,41 @@ const VerUsuario: React.FC = () => {
     );
   }
 
+  // Helper: obtener iniciales
+  const getInitials = (fullName = "") =>
+    fullName
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
+  // Si la foto es un base64 sin prefijo, agregarlo (defensivo)
+  const normalizeFotografia = (fotografia?: string) => {
+    if (!fotografia) return undefined;
+    const trimmed = fotografia.trim();
+    if (trimmed.startsWith("data:")) return trimmed;
+    // asumimos png por defecto si no viene prefijo
+    return `data:image/png;base64,${trimmed}`;
+  };
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-6xl mx-auto bg-gradient-to-r">
           {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <button
               onClick={handleNavigateBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="font-medium">Volver</span>
             </button>
             <button
               onClick={() => handleEditProfile(usuario.idUsuario)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 text-white transition-all transform bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 hover:scale-105"
             >
               <Edit className="w-4 h-4" />
               <span>Editar Perfil</span>
@@ -259,44 +286,43 @@ const VerUsuario: React.FC = () => {
           </div>
 
           {/* Main Profile Card */}
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-blue-600 to-red-600 h-28"></div>     
+          <div className="mb-6 overflow-hidden bg-white shadow-xl rounded-2xl">
+            <div className="bg-gradient-to-r from-blue-600 to-red-600 h-28"></div>
             <div className="px-8 pb-8">
-              <div className="flex flex-col md:flex-col items-center md:items-center gap-6 -mt-16 ">
+              <div className="flex flex-col items-center gap-6 -mt-16 md:flex-col md:items-center ">
                 {/* Profile Photo */}
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full bg-white shadow-xl overflow-hidden border-4 border-white">
-                    {loadingPhoto ? (
-                      <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
-                        <Camera className="w-8 h-8 text-gray-400" />
-                      </div>
-                    ) : fotoPerfil?.fotoBase64 ? (
-                      <img
-                        src={`data:image/jpeg;base64,${fotoPerfil.fotoBase64}`}
-                        alt={usuario.nombreCompleto}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-800 to-red-600 flex items-center justify-center">
-                        <span className="text-white text-3xl font-bold">
-                          {usuario.nombreCompleto
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)
-                            .toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+
+                  {/* Gradient border outer wrapper */}
+                  <div className="p-1 rounded-full shadow-xl w-36 h-36">
+                    <div className="flex items-center justify-center w-full h-full overflow-hidden bg-white rounded-full">
+                      {loadingPhoto ? (
+                        <div className="flex items-center justify-center w-full h-full bg-gray-200 border-6 animate-pulse">
+                          <Camera className="w-8 h-8 text-gray-400" />
+                        </div>
+                      ) : fotoPerfil?.fotografia ? (
+                        <img
+                          src={normalizeFotografia(fotoPerfil.fotografia)}
+                          alt={usuario.nombreCompleto}
+                          className="object-cover w-full h-full border-white rounded-full border-6"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full border-white rounded-full border-6 bg-gradient-to-br from-blue-800 to-red-600">
+                          <span className="text-3xl font-bold text-white">
+                            {getInitials(usuario.nombreCompleto)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Basic Info */}
-                <div className="flex-1 text-center md:text-left mt-2 md:mt-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <div className="flex-1 mt-2 text-center md:text-left md:mt-8">
+                  <h1 className="mb-2 text-3xl font-bold text-gray-900">
                     {usuario.nombreCompleto}
                   </h1>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-gray-600">
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-gray-600 md:justify-start">
                     <div className="flex items-center gap-2">
                       {obtenerIconoTipoUsuario(usuario.tipoUsuario)}
                       <span className="font-medium">
@@ -317,10 +343,10 @@ const VerUsuario: React.FC = () => {
           </div>
 
           {/* Information Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Contact Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-6 transition-shadow bg-white shadow-lg rounded-xl hover:shadow-xl">
+              <h2 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
                 <User className="w-5 h-5 text-blue-600" />
                 Información Personal
               </h2>
@@ -329,16 +355,14 @@ const VerUsuario: React.FC = () => {
                   <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500">Correo Electrónico</p>
-                    <p className="text-gray-900 font-medium">
-                      {usuario.correo}
-                    </p>
+                    <p className="font-medium text-gray-900">{usuario.correo}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500">Identificación</p>
-                    <p className="text-gray-900 font-medium">
+                    <p className="font-medium text-gray-900">
                       {obtenerNombreTipoIdentificacion(
                         usuario.tipoIdentificacion
                       )}{" "}
@@ -350,10 +374,10 @@ const VerUsuario: React.FC = () => {
                   <div className="flex items-start gap-3">
                     <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500 mb-1">Teléfonos</p>
+                      <p className="mb-1 text-sm text-gray-500">Teléfonos</p>
                       <div className="space-y-1">
                         {usuario.telefonos.map((tel, index) => (
-                          <p key={index} className="text-gray-900 font-medium">
+                          <p key={index} className="font-medium text-gray-900">
                             {tel.numero}
                           </p>
                         ))}
@@ -365,8 +389,8 @@ const VerUsuario: React.FC = () => {
             </div>
 
             {/* Academic/Professional Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-6 transition-shadow bg-white shadow-lg rounded-xl hover:shadow-xl">
+              <h2 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
                 {usuario.tipoUsuario === 1 ? (
                   <>
                     <GraduationCap className="w-5 h-5 text-blue-600" />
@@ -383,7 +407,7 @@ const VerUsuario: React.FC = () => {
                 {/* Mostrar carreras */}
                 {usuario.carreras && usuario.carreras.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-500 mb-2">Carreras</p>
+                    <p className="mb-2 text-sm text-gray-500">Carreras</p>
                     <div className="flex flex-wrap gap-2">
                       {usuario.carreras.map((c, index) => (
                         <span
@@ -400,7 +424,7 @@ const VerUsuario: React.FC = () => {
                 {/* Mostrar áreas */}
                 {usuario.areas && usuario.areas.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-500 mb-2">Áreas</p>
+                    <p className="mb-2 text-sm text-gray-500">Áreas</p>
                     <div className="flex flex-wrap gap-2">
                       {usuario.areas.map((a, index) => (
                         <span
@@ -417,8 +441,8 @@ const VerUsuario: React.FC = () => {
                 {/* Mensaje si no tiene carreras ni áreas */}
                 {(!usuario.carreras || usuario.carreras.length === 0) &&
                   (!usuario.areas || usuario.areas.length === 0) && (
-                    <div className="text-center py-4">
-                      <p className="text-gray-500 italic">
+                    <div className="py-4 text-center">
+                      <p className="italic text-gray-500">
                         No hay información académica o profesional registrada
                       </p>
                     </div>
@@ -428,31 +452,23 @@ const VerUsuario: React.FC = () => {
           </div>
 
           {/* Additional Info Card */}
-          <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+          <div className="p-6 mt-6 border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
             <div className="flex items-center gap-3 mb-3">
               <CheckCircle className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Información del Sistema
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Información del Sistema</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
               <div>
                 <p className="text-gray-500">ID de Usuario</p>
-                <p className="text-gray-900 font-mono text-xs mt-1">
-                  {usuario.idUsuario}
-                </p>
+                <p className="mt-1 font-mono text-xs text-gray-900">{usuario.idUsuario}</p>
               </div>
               <div>
                 <p className="text-gray-500">Tipo de Usuario</p>
-                <p className="text-gray-900 font-medium mt-1">
-                  {obtenerNombreTipoUsuario(usuario.tipoUsuario)}
-                </p>
+                <p className="mt-1 font-medium text-gray-900">{obtenerNombreTipoUsuario(usuario.tipoUsuario)}</p>
               </div>
               <div>
                 <p className="text-gray-500">Estado Actual</p>
-                <p className="text-gray-900 font-medium mt-1">
-                  {obtenerNombreEstado(usuario.estadoUsuario)}
-                </p>
+                <p className="mt-1 font-medium text-gray-900">{obtenerNombreEstado(usuario.estadoUsuario)}</p>
               </div>
             </div>
           </div>

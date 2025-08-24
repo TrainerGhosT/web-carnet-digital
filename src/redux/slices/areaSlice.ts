@@ -15,8 +15,8 @@ export const getAreas = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.fetchAreas();
-      console.log('🟢 RESPONSE:', response.data);
-      return response.data.data;  // Suponiendo que la respuesta tiene la estructura { data: [...] }
+      console.log('🟢 RESPONSE:', response);
+      return response;  // Suponiendo que la respuesta tiene la estructura { data: [...] }
     } catch (error: unknown) {
       if (error instanceof Error) return rejectWithValue(error.message);
       return rejectWithValue('Error desconocido al obtener áreas');
